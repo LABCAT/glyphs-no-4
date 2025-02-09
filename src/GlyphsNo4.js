@@ -4,8 +4,8 @@ import LABCATGlyph from './classes/LABCATGlyph';
 /** 
  * Add your ogg and mid files in the audio director and update these file names
  */
-// const audio = new URL("@audio/your-audio-file.ogg", import.meta.url).href;
-// const midi = new URL("@audio/your-midi-file.mid", import.meta.url).href;
+const audio = new URL("@audio/glyphs-no-4.ogg", import.meta.url).href;
+const midi = new URL("@audio/glyphs-no-4.mid", import.meta.url).href;
 
 const GlyphsNo4 = (p) => {
     /** 
@@ -23,9 +23,11 @@ const GlyphsNo4 = (p) => {
         /** 
          * Log when preload starts
          */
-        // p.song = p.loadSound(audio, p.loadMidi);
-        // p.song.onended(() => p.songHasFinished = true);
+        p.song = p.loadSound(audio, p.loadMidi);
+        p.song.onended(() => p.songHasFinished = true);
     };
+
+    p.glyph = null;
 
     /** 
      * Setup function - Initialize your canvas and any starting properties
@@ -34,9 +36,8 @@ const GlyphsNo4 = (p) => {
     p.setup = () => {
         p.createCanvas(p.windowWidth, p.windowHeight);
         p.colorMode(p.HSB);
-        p.glyph = new LABCATGlyph(p, p.width / 2, p.height / 2, p.height / 2);
-        console.log(p.glyph);
-        document.getElementById("loader").classList.add("loading--complete");
+        p.colourSet = p.generateColorSet();
+        p.background(p.colourSet[0]);
     };
 
     /** 
@@ -44,16 +45,52 @@ const GlyphsNo4 = (p) => {
      * This runs continuously after setup
      */
     p.draw = () => {
-        p.background(0);
-        p.glyph.draw();
-        p.glyph.update();
-        if(p.audioLoaded && p.song.isPlaying() || p.songHasFinished){
-            /** 
-             * Add your animation code here
-             * This will run while the song is playing or has finished
-             */
+        if(p.audioLoaded && p.song.isPlaying() && p.glyph){
+            p.background(p.colourSet[0]);
+            p.fill(0, 0, 0);
+            p.rect(0, 0, p.width, p.height);
+            p.drawGradientRectangle();
+            p.glyph.draw();
+            p.glyph.update();
+            p.bgOpacity = p.bgOpacity + 0.01;
         }
     }
+
+    p.drawGradientRectangle = () => {
+        const ctx = p.drawingContext;
+
+        // Create a rotating angle based on frame count
+        const angle = p.frameCount * 0.01; // Adjust speed of rotation
+
+        // Create a conic gradient
+        const gradient = ctx.createConicGradient(angle, p.width / 2, p.height / 2);
+
+        // Add color stops to the gradient
+        for (let i = 0; i < 16; i++) {
+            const colorIndex = i % p.colourSet.length; // Use modulo to loop through the colourSet
+            const color = p.colourSet[colorIndex];
+            const p5Color = p.color(color); // Convert the color to a p5.Color object
+            gradient.addColorStop(i / 16, p5Color.toString()); // Use the string format of the color
+        }
+
+        // Save the original stroke settings
+        const originalStrokeStyle = ctx.strokeStyle;
+        const originalLineWidth = ctx.lineWidth;
+
+        // Set the gradient stroke using the 2D canvas context directly
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 40; // Adjust the thickness as needed
+
+        // Draw the full-screen rectangle with the animated gradient stroke
+        p.noFill();
+        p.rect(40, 40, p.width - 80, p.height - 80);
+
+        // Reset the stroke settings to avoid affecting other parts
+        ctx.strokeStyle = originalStrokeStyle;
+        ctx.lineWidth = originalLineWidth;
+    };
+
+
 
     /** 
      * MIDI loading and processing
@@ -68,19 +105,7 @@ const GlyphsNo4 = (p) => {
             /** 
              * Example: Schedule different tracks for different visual elements
              */
-            const track1 = result.tracks[0].notes;
-            /** 
-             * Schedule your cue sets
-             * You can add multiple tracks by:
-             * 1. Getting notes from different MIDI tracks (e.g., tracks[1], tracks[2])
-             * 2. Creating corresponding execute functions (e.g., executeTrack2, executeTrack3)
-             * 3. Adding new scheduleCueSet calls for each track
-             * Example:
-             * const track2 = result.tracks[1].notes;
-             * const track3 = result.tracks[2].notes;
-             * p.scheduleCueSet(track2, 'executeTrack2');
-             * p.scheduleCueSet(track3, 'executeTrack3');
-             */
+            const track1 = result.tracks[4].notes; // NN-XT - Dream Piano
             p.scheduleCueSet(track1, 'executeTrack1');
             /** 
              * Update UI elements when loaded
@@ -112,17 +137,42 @@ const GlyphsNo4 = (p) => {
         }
     }
 
-    /** 
-     * Example track execution functions
-     * Add your animation triggers here
-     */
-    p.executeTrack1 = (note) => {
-        /** 
-         * Add animation code triggered by track 1
-         * Example: trigger based on note properties
-         */
-        const { midi, velocity, currentCue } = note;
+    p.executeTrack1 = ({currentCue}) => {
+        if(!p.glyph || currentCue % 66 === 1) {
+            p.colourSet = p.generateColorSet();
+            p.glyph = new LABCATGlyph(
+                p, 
+                p.width / 2, 
+                p.height / 2, 
+                p.random(p.height / 8 * 3, p.height / 8 * 7)
+            );
+        }
+        else {
+            p.glyph.nextColour();
+        }
     }
+
+    p.generateColorSet = (count = 6) => {
+        const baseHue = Math.floor(Math.random() * 360);
+        const colors = [];
+
+        for (let i = 0; i < count; i++) {
+            // Use large variations in hue for psychedelic effects
+            const hue = (baseHue + (Math.random() * 360)) % 360;
+            
+            // Saturation between 80-100 for very bold and saturated colors
+            const saturation = Math.floor(Math.random() * 20) + 80;
+
+            // Brightness between 50-90 for a mix of bright and vibrant tones
+            const brightness = Math.floor(Math.random() * 40) + 50;
+            
+            // Push HSB color into the set
+            colors.push(p.color(hue, saturation, brightness));
+        }
+
+        return colors;
+    }
+
 
     /** 
      * Handle mouse/touch interaction

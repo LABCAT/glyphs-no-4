@@ -3,30 +3,34 @@ export default class LABCATGlyph {
         this.p = p5;
         this.x = x;
         this.y = y;
+        this.rotation = this.p.random(0, 360);
         this.width = width;
-        this.maxWidth = width;
-        this.center = this.width / 2;
-        this.rotation = 0;
-        
+        this.nextColour();
+    }
+
+    nextColour() {
         // the HSB colour that this Glyph represents
+        const randomColour = this.p.random(this.p.colourSet);
         this.hsbColour = [
-            this.p.random(0, 360),
-            this.p.random(0, 100),
-            this.p.random(0, 100)
+            this.p.hue(randomColour),       
+            this.p.saturation(randomColour),
+            this.p.brightness(randomColour)  
         ];
-        
+       
         // value of the hue dimension
         this.hueDegree = this.hsbColour[0];
         this.brightnessTrans = this.p.map(this.hsbColour[2], 0, 100, 0.8, 0);
         this.hueTrans = this.p.map(this.hsbColour[2], 100, 0, 0.9, 0.1);
+        this.center = this.width / 2;
+        this.opacityMultiplier = 0;
+        this.rotation = this.p.random(0, 360);
         this.update();
     }
 
     update() {
-        if(this.width < this.maxWidth) {
-            this.width = this.width + (Math.random() / 4);
-        }
-        this.rotation++;
+        // this.width = this.width + 32;
+        this.opacityMultiplier = this.opacityMultiplier >= 1 ? 1 : this.opacityMultiplier + 0.05;
+        // this.rotation++;
 
         this.center = this.width / 2;
 
@@ -141,12 +145,22 @@ export default class LABCATGlyph {
         // draw the circles that represent the saturation dimension
         this.p.stroke(0);
         for(var i = 0; i < 3; i++){
-            this.p.fill(0, 0, this.satCircles['brightness'][i], this.satCircles['alpha'][i]);
+            this.p.fill(
+                0, 
+                0, 
+                this.satCircles['brightness'][i], 
+                this.satCircles['alpha'][i] * this.opacityMultiplier
+            );
             this.p.ellipse(this.center, this.center, this.satCircles['size'][i]);
         }
 
         // draw the octagon
-        this.p.fill(this.hueDegree, 100, 100, this.brightnessTrans);
+        this.p.fill(
+            this.hueDegree, 
+            100, 
+            100, 
+            this.brightnessTrans * this.opacityMultiplier
+        );
         this.p.octagon(this.center, this.center, this.width / 3);
 
         //draw the stars that represent the hue dimension
@@ -155,15 +169,11 @@ export default class LABCATGlyph {
         this.p.translate(this.center, this.center);
         this.p.rotate(this.hueDegree);
 
-        const hsba = Array(this.hueDegree, 100, 100, this.hueTrans);
+        const hsba = Array(this.hueDegree, 100, 100, this.hueTrans * this.opacityMultiplier);
         this.star(hsba, this.positions, 3);
         this.p.rotate(-this.hueDegree);
         this.p.translate(-this.center, -this.center);
-        this.star(Array(0, 0, 100, 0.8), this.positions);
-
-        // this.p.rotate(-this.rotation);
-        // this.p.translate(this.width/2, this.width/2);
-        // this.p.translate(-this.x, -this.y);
+        this.star(Array(0, 0, 100, 0.8 * this.opacityMultiplier), this.positions);
         this.p.pop();
     }
 
