@@ -1,10 +1,14 @@
 export default class LABCATGlyph {
-    constructor(p5, x, y, width) {
+    constructor(p5, x, y, width, shouldGrow = false) {
         this.p = p5;
         this.x = x;
         this.y = y;
         this.rotation = this.p.random(0, 360);
-        this.width = width;
+        
+        // Simple growth flag
+        this.shouldGrow = shouldGrow;
+        this.width = shouldGrow ? 0 : width; // Start at 0 if growing
+        
         this.nextColour();
     }
 
@@ -28,9 +32,21 @@ export default class LABCATGlyph {
     }
 
     update() {
-        // this.width = this.width + 32;
+        // Increase width if growing
+        if (this.shouldGrow) {
+            this.width += 32; // Faster growth as requested
+            
+            // Check if we need to initialize rotation direction
+            if (!this.rotationDirection) {
+                // Randomly choose between 1 (clockwise) and -1 (counterclockwise)
+                this.rotationDirection = this.p.random([-1, 1]);
+            }
+            
+            // Apply rotation in the chosen direction
+            this.rotation += 1 * this.rotationDirection;
+        }
+        
         this.opacityMultiplier = this.opacityMultiplier >= 1 ? 1 : this.opacityMultiplier + 0.05;
-        // this.rotation++;
 
         this.center = this.width / 2;
 
@@ -136,6 +152,9 @@ export default class LABCATGlyph {
     }
 
     draw() {
+        // Skip drawing if width is too small
+        if (this.width < 1) return;
+        
         this.p.push();
         
         this.p.translate(this.x, this.y);
