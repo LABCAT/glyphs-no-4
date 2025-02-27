@@ -225,17 +225,15 @@ const GlyphsNo4 = (p) => {
             // This is the very last glyph in the entire track - make it special!
             p.glyphs = []; // Clear existing glyphs
             
-            // Create a special grand finale glyph
+            // Create a special grand finale glyph with the final glyph flag
             const finalGlyph = new LABCATGlyph(
                 p,
                 p.width / 2,
                 p.height / 2,
                 p.height / 1.5, // Make it super large - almost filling the canvas
-                true // Set shouldGrow to true
+                true, // Set shouldGrow to true
+                true  // Set isFinalGlyph to true
             );
-            
-            // Set special properties for the grand finale glyph
-            finalGlyph.isGrandFinale = true;
             
             p.glyphs = [finalGlyph];
             p.glyph = finalGlyph; // Keep reference for backward compatibility
