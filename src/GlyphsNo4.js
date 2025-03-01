@@ -37,7 +37,7 @@ const GlyphsNo4 = (p) => {
         p.createCanvas(p.windowWidth, p.windowHeight);
         p.colorMode(p.HSB);
         p.colourSet = p.generateColorSet();
-        p.background(p.colourSet[0]);
+        p.background(0);
     };
 
     /** 
@@ -46,7 +46,7 @@ const GlyphsNo4 = (p) => {
      */
     p.draw = () => {
     if(p.audioLoaded && p.song.isPlaying() && p.glyphs && p.glyphs.length > 0){
-        p.background(p.colourSet[0]);
+        p.background(0);
         p.fill(0, 0, 0);
         p.rect(0, 0, p.width, p.height);
         p.drawGradientRectangle();
